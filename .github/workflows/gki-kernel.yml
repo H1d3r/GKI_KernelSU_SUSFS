@@ -189,7 +189,7 @@ jobs:
             cd common
             sed -i "s/ztc1997/ifttt/g" arch/arm64/configs/gki_defconfig
             git read-tree --reset -u -v HEAD
-            git pack-refs --all --prune 1>| 2>|
+            git pack-refs --all --prune 
             cd /home/runner/work/GKI_KernelSU_SUSFS/GKI_KernelSU_SUSFS/$CONFIG/common
             git read-tree --reset -u -v HEAD
           fi
