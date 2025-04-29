@@ -191,7 +191,7 @@ jobs:
             git read-tree --reset -u -v HEAD
             git pack-refs --all --prune 
             cd ../
-            cp -R common/* ../../../common/
+            cp -R common/* ../../common/
             cd /home/runner/work/GKI_KernelSU_SUSFS/GKI_KernelSU_SUSFS/$CONFIG/common
             git read-tree --reset -u -v HEAD
           fi
