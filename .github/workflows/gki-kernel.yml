@@ -202,7 +202,7 @@ jobs:
             cp -r temp_common/{*,.*} . || true
             rm -rf temp_common
 
-          elif [[ "$FORMATTED_BRANCH" == "android12-5.10-lts" || "${{ inputs.kernel_version }}" =="5.10" ]]; then
+          elif [[ "$FORMATTED_BRANCH" == "android12-5.10-lts" || "${{ inputs.kernel_version }}" == "5.10" ]]; then
             echo "Using custom Android12 common repo: ${{ inputs.common_repo_android12 }}"
             cd common
             rm -rf {*,.*} || true
