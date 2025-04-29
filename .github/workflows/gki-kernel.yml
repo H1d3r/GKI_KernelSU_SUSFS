@@ -167,7 +167,7 @@ jobs:
           FORMATTED_BRANCH="${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.os_patch_level }}"
           $REPO init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-${FORMATTED_BRANCH} --repo-rev=v2.16
 
-          REMOTE_BRANCH=$(git ls-remote https://github.com/ztc1997/android_gki_kernel_5.10_common ${FORMATTED_BRANCH})
+          REMOTE_BRANCH=$(git ls-remote https://android.googlesource.com/kernel/common ${FORMATTED_BRANCH})
           DEFAULT_MANIFEST_PATH=.repo/manifests/default.xml
 
           # Check if branch is deprecated
@@ -180,6 +180,7 @@ jobs:
           $REPO --version
           $REPO --trace sync -c -j$(nproc --all) --no-tags --fail-fast
           if [ "5.10" == "5.10" ];then
+            REMOTE_BRANCH=$(git ls-remote https://github.com/ztc1997/android_gki_kernel_5.10_common ${FORMATTED_BRANCH})
             #cd /home/runner/work/GKI_KernelSU_SUSFS/GKI_KernelSU_SUSFS/$CONFIG/;
             cd /home/runner/work/GKI_KernelSU_SUSFS/GKI_KernelSU_SUSFS/$CONFIG/.repo/projects/
             rm -rf common;
@@ -374,6 +375,7 @@ jobs:
             rm -rf ./common/android/abi_gki_protected_exports_*
             sed -i "/stable_scmversion_cmd/s/-maybe-dirty//g" ./build/kernel/kleaf/impl/stamp.bzl
             sed -E -i '/^CONFIG_LOCALVERSION=/ s/(.*)"$/\1"/' ./common/arch/arm64/configs/gki_defconfig
+            cat ./common/arch/arm64/configs/gki_defconfig |grep CONFIG_LOCALVERSION
             #tools/bazel build --config=fast --lto=${{ inputs.lto_type }} //common:kernel_aarch64_dist
           fi
 
