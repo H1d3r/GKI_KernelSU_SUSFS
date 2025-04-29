@@ -167,7 +167,7 @@ jobs:
           FORMATTED_BRANCH="${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.os_patch_level }}"
           $REPO init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-${FORMATTED_BRANCH} --repo-rev=v2.16
 
-          REMOTE_BRANCH=$(git ls-remote https://android.googlesource.com/kernel/common ${FORMATTED_BRANCH})
+          REMOTE_BRANCH=$(git ls-remote https://github.com/ztc1997/android_gki_kernel_5.10_common ${FORMATTED_BRANCH})
           DEFAULT_MANIFEST_PATH=.repo/manifests/default.xml
 
           # Check if branch is deprecated
@@ -180,13 +180,15 @@ jobs:
           $REPO --version
           $REPO --trace sync -c -j$(nproc --all) --no-tags --fail-fast
           if [ "5.10" == "5.10" ];then
-            cd /home/runner/work/GKI_KernelSU_SUSFS/GKI_KernelSU_SUSFS/$CONFIG/;
-            #rm -rf common;
-            git clone -b $FORMATTED_BRANCH --single-branch --depth=1 https://github.com/ztc1997/android_gki_kernel_5.10_common ztc;
-            cp -R ztc/* common/
+            #cd /home/runner/work/GKI_KernelSU_SUSFS/GKI_KernelSU_SUSFS/$CONFIG/;
+            cd /home/runner/work/GKI_KernelSU_SUSFS/GKI_KernelSU_SUSFS/$CONFIG/.repo/projects/
+            rm -rf common;
+            git clone -b $FORMATTED_BRANCH --single-branch --depth=1 https://github.com/ztc1997/android_gki_kernel_5.10_common common;
+            #cp -R ztc/* common/
             cd common
             sed -i "s/ztc1997/ifttt/g" arch/arm64/configs/gki_defconfig
             git read-tree --reset -u -v HEAD
+            git pack-refs --all --prune 1>| 2>|
           fi
 
       #- name: Copy file
