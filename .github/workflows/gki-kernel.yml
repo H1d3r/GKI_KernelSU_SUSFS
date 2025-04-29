@@ -377,10 +377,7 @@ jobs:
             rm -rf ./common/android/abi_gki_protected_exports_*
             sed -i "/stable_scmversion_cmd/s/-maybe-dirty//g" ./build/kernel/kleaf/impl/stamp.bzl
             echo "2次替换前版本"
-            cat ./common/arch/arm64/configs/gki_defconfig |grep CONFIG_LOCALVERSION
-            sed -E -i '/^CONFIG_LOCALVERSION=/ s/(.*)"$/\1"/' ./common/arch/arm64/configs/gki_defconfig
-            echo "2次替换后版本"
-            cat ./common/arch/arm64/configs/gki_defconfig |grep CONFIG_LOCALVERSION
+            #sed -E -i '/^CONFIG_LOCALVERSION=/ s/(.*)"$/\1"/' ./common/arch/arm64/configs/gki_defconfig
             #tools/bazel build --config=fast --lto=${{ inputs.lto_type }} //common:kernel_aarch64_dist
           fi
 
