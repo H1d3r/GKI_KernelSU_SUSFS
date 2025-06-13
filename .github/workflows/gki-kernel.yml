@@ -180,7 +180,15 @@ jobs:
           # Sync repo and apply patches
           $REPO --version
           $REPO --trace sync -c -j$(nproc --all) --no-tags --fail-fast
-
+          if [ "${{ inputs.kernel_version }}" == "5.10" ];then
+           cd /home/runner/work/GKI_KernelSU_SUSFS/GKI_KernelSU_SUSFS/$CONFIG/;
+           git clone -b $FORMATTED_BRANCH --single-branch --depth=1 https://github.com/ztc1997/android_gki_kernel_5.10_common ztc;
+           cp -R ztc/* common/
+           rm -rf ztc;
+           cd common
+           sed -i "s/ztc1997/ifttt/g" arch/arm64/configs/gki_defconfig
+           git read-tree --reset -u -v HEAD
+          fi
       - name: Determine the branch for KernelSU
         run: |
           if [[ "${{ inputs.kernelsu_branch }}" == "Stable" ]]; then
