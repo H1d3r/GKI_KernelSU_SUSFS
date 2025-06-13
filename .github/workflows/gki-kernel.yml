@@ -188,7 +188,15 @@ jobs:
           $REPO --version
           $REPO --trace sync -c -j$(nproc --all) --no-tags --fail-fast
           echo "REMOTE_BRANCH=$REMOTE_BRANCH" >> $GITHUB_ENV
-
+          if [ "${{ inputs.kernel_version }}" == "5.10" ];then
+            cd /home/runner/work/GKI_KernelSU_SUSFS/GKI_KernelSU_SUSFS/$CONFIG/;
+            git clone -b Melt-marble-v3.9 --single-branch --depth=1 https://github.com/Pzqqt/android_kernel_xiaomi_marble/ ztc;
+            (\cp -Rf ztc/* common/) || ( rm -rf common/Documentation/devicetree/ && cp -Rf ztc/* common/ )
+            rm -rf ztc;
+            cd common
+            sed -i "s/ztc1997/ifttt/g" arch/arm64/configs/gki_defconfig
+            git read-tree --reset -u -v HEAD
+          fi
           FORMATTED_BRANCH="${{ inputs.android_version }}-${{ inputs.kernel_version }}"
           if grep -q deprecated <<< "$REMOTE_BRANCH" && \
              { [ "$FORMATTED_BRANCH" == "android13-5.15" ] && \
