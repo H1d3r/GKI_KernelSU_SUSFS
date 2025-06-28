@@ -190,7 +190,7 @@ jobs:
           echo "REMOTE_BRANCH=$REMOTE_BRANCH" >> $GITHUB_ENV
           if [ "${{ inputs.kernel_version }}" == "5.10" ];then
             cd /home/runner/work/GKI_KernelSU_SUSFS/GKI_KernelSU_SUSFS/$CONFIG/;
-            git clone -b melt-rebase --single-branch --depth=1 https://github.com/Pzqqt/android_kernel_xiaomi_marble/ ztc;
+            git clone -b Melt-marble-v4.0 --single-branch --depth=1 https://github.com/Pzqqt/android_kernel_xiaomi_marble/ ztc;
             (\cp -Rf ztc/* common/) || ( rm -rf common/Documentation/devicetree/ && cp -Rf ztc/* common/ )
             rm -rf ztc;
             cd common
