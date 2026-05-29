@@ -805,35 +805,92 @@ CONFIG_ZRAM_WRITEBACK=y
     
     def _configure_bazel(self) -> None:
         """配置 Bazel 构建"""
+        self._chdir(self.work_dir)
+
         modules_bzl = self.work_dir / "common/modules.bzl"
 
+        # 总是移除 zram 和 zsmalloc 模块（它们会编译为内置）
         if modules_bzl.exists():
             logger.info("修改 modules.bzl 移除 zram 和 zsmalloc")
             with open(modules_bzl, "r") as f:
                 content = f.read()
 
-            # 移除 zram 和 zsmalloc 模块
-            modified = False
-            if '"drivers/block/zram/zram.ko",' in content:
-                content = content.replace('"drivers/block/zram/zram.ko",\n', '')
-                content = content.replace('"drivers/block/zram/zram.ko",', '')
-                modified = True
-            if '"mm/zsmalloc.ko",' in content:
-                content = content.replace('"mm/zsmalloc.ko",\n', '')
-                content = content.replace('"mm/zsmalloc.ko",', '')
-                modified = True
+            original_content = content
 
-            if modified:
+            # 使用正则表达式移除模块（更可靠）
+            import re
+
+            # 移除 zram.ko 模块
+            content = re.sub(r'^\s*"drivers/block/zram/zram\.ko",?\s*$', '', content, flags=re.MULTILINE)
+            # 移除 zsmalloc.ko 模块
+            content = re.sub(r'^\s*"mm/zsmalloc\.ko",?\s*$', '', content, flags=re.MULTILINE)
+
+            # 清理多余的空行
+            content = re.sub(r'\n{3,}', '\n\n', content)
+
+            if content != original_content:
                 with open(modules_bzl, "w") as f:
                     f.write(content)
                 logger.info("已移除 zram 和 zsmalloc 模块引用")
+
+                # 验证修改
+                with open(modules_bzl, "r") as f:
+                    verify = f.read()
+                if 'zram.ko' not in verify and 'zsmalloc.ko' not in verify:
+                    logger.info("验证通过：modules.bzl 中已无 zram/zsmalloc")
+                else:
+                    logger.warning("警告：modules.bzl 中可能仍有 zram/zsmalloc 引用")
+                    # 再次尝试移除
+                    for pattern in ['zram.ko', 'zsmalloc.ko']:
+                        if pattern in verify:
+                            content = re.sub(rf'^\s*".*{re.escape(pattern)}.*",?\s*$', '', verify, flags=re.MULTILINE)
+                            with open(modules_bzl, "w") as f:
+                                f.write(content)
+                            logger.info(f"已再次移除 {pattern}")
+            else:
+                logger.warning("modules.bzl 中未找到 zram/zsmalloc 模块引用")
+        else:
+            logger.warning("modules.bzl 不存在，跳过模块移除")
 
         config_file = self.work_dir / "common/arch/arm64/configs/gki_defconfig"
         with open(config_file, "a") as f:
             f.write("CONFIG_MODULE_SIG_FORCE=n\n")
 
         logger.info("Bazel 配置完成")
-    
+
+    def _cleanup_modules_bzl(self) -> None:
+        """清理 modules.bzl 中的 zram/zsmalloc 引用（防止被覆盖）"""
+        self._chdir(self.work_dir)
+        modules_bzl = self.work_dir / "common/modules.bzl"
+
+        if not modules_bzl.exists():
+            return
+
+        import re
+
+        with open(modules_bzl, "r") as f:
+            content = f.read()
+
+        original = content
+
+        # 移除所有包含 zram.ko 或 zsmalloc.ko 的行
+        lines = content.split('\n')
+        new_lines = []
+        for line in lines:
+            if 'zram.ko' in line or 'zsmalloc.ko' in line:
+                continue
+            new_lines.append(line)
+
+        content = '\n'.join(new_lines)
+
+        # 清理多余空行
+        content = re.sub(r'\n{3,}', '\n\n', content)
+
+        if content != original:
+            with open(modules_bzl, "w") as f:
+                f.write(content)
+            logger.info("已清理 modules.bzl 中的 zram/zsmalloc 引用")
+
     def configure_kernel_name(self) -> None:
         """配置内核名称"""
         logger.info("=== 配置内核名称 ===")
@@ -1229,7 +1286,10 @@ CONFIG_ZRAM_WRITEBACK=y
             # 4. 配置内核
             self.configure_kernel()
             self.configure_kernel_name()
-            
+
+            # 4.5 再次清理 modules.bzl（总是清理 zram/zsmalloc）
+            self._cleanup_modules_bzl()
+
             # 5. 编译
             build_success = self.build_kernel()
             if not build_success:
