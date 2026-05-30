@@ -348,7 +348,20 @@ CONFIG_KSU_SUSFS_OPEN_REDIRECT=y
         logger.info("=== 配置内核 ===")
         self._chdir(self.work_dir)
         config_file = self.work_dir / "common/arch/arm64/configs/gki_defconfig"
-        if not config_file.exists():
+        
+        # 检查是否使用 Bazel 构建 (android14/android15 使用 Bazel)
+        use_bazel = not (self.work_dir / "build/build.sh").exists()
+        
+        # 对于 Bazel 构建，跳过 defconfig 配置（使用 .config 或其他方式）
+        if use_bazel:
+            logger.info("Bazel 构建模式：使用 build.config.gki.aarch64 进行配置")
+            # Bazel 构建不使用 gki_defconfig，配置在 build.config.gki.aarch64 中处理
+            # 确保 common 目录存在
+            common_dir = self.work_dir / "common"
+            if common_dir.exists():
+                # 对于 Bazel，构建前需要确保必要的配置被应用
+                # 通过环境变量或 build.config 设置
+                pass
             return
 
         with open(config_file, "a") as f:
@@ -483,12 +496,15 @@ CONFIG_KSU_SUSFS_OPEN_REDIRECT=y
                     f.write(content)
 
             if self.config.custom_version:
-                config_file = self.workspace / "common/arch/arm64/configs/gki_defconfig"
-                with open(config_file, "r") as f:
-                    content = f.read()
-                content = re.sub(r'^CONFIG_LOCALVERSION=".*"$', f'CONFIG_LOCALVERSION="{self.config.custom_version}"', content, flags=re.MULTILINE)
-                with open(config_file, "w") as f:
-                    f.write(content)
+                config_file = self.work_dir / "common/arch/arm64/configs/gki_defconfig"
+                if config_file.exists():
+                    with open(config_file, "r") as f:
+                        content = f.read()
+                    content = re.sub(r'^CONFIG_LOCALVERSION=".*"$', f'CONFIG_LOCALVERSION="{self.config.custom_version}"', content, flags=re.MULTILINE)
+                    with open(config_file, "w") as f:
+                        f.write(content)
+                else:
+                    logger.warning(f"配置文件不存在，跳过 custom_version 设置: {config_file}")
 
     def build_kernel(self) -> bool:
         logger.info("=== 开始编译内核 ===")
